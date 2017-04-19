@@ -12,7 +12,7 @@
 #include <kern/kdebug.h>
 
 #define CMDBUF_SIZE	80	// enough for one VGA text line
-#define REG_AMNT 7
+#define REG_AMNT 6
 #define FIRST_EBP_VALUE 0x0
 #define REG_SIZE 4
 
@@ -27,6 +27,7 @@ struct Command {
 static struct Command commands[] = {
 	{ "help", "Display this list of commands", mon_help },
 	{ "kerninfo", "Display information about the kernel", mon_kerninfo },
+	{ "backtrace", "Display the current backtrace", mon_backtrace},
 };
 
 /***** Implementations of basic kernel monitor commands *****/
@@ -60,21 +61,29 @@ mon_kerninfo(int argc, char **argv, struct Trapframe *tf)
 int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
+    struct Eipdebuginfo eip_debuginfo;
 	uint32_t *regs = (uint32_t *)read_ebp(); // Puntero a los registros del stack
-	while (regs[0] > FIRST_EBP_VALUE) { // ebp != de la primera llamada
-		cprintf("ebp %08x ", regs);
-		for (uint32_t i = 1; i < REG_AMNT + 1; i++) { // OBTENGO LOS REGISTROS 
-			regs[i] = regs[i]; // regi = ebp[i]
-			if (i == 1) { // reg1 = eip
-				cprintf("eip %08x args ", regs[i]);
-			} else { // regi = argi
-				cprintf("%08x ", regs[i]);
-			}	
-		}
 
-		regs = (uint32_t *)regs[0];
+	while (regs > FIRST_EBP_VALUE) { // ebp != de la primera llamada
+		uint32_t *eip = (uint32_t *)*(regs+1);
+
+		cprintf("ebp %08x ", regs);
+		cprintf("eip %08x args ", eip);
+		for (uint32_t i = 2; i < REG_AMNT+1; i++) { // OBTENGO LOS REGISTROS 
+			cprintf("%08x ", *(regs+i));
+		}
+		cprintf("\n");
+		regs = (uint32_t *)*regs;
+
+        debuginfo_eip((uintptr_t)eip, &eip_debuginfo);  
+        cprintf("%s:%d: ", eip_debuginfo.eip_file, eip_debuginfo.eip_line);  
+        // Como eip_fn_name no tiene fin de string
+        // imprimo por caracter hasta el largo del nombre.
+        for (int i = 0; i < eip_debuginfo.eip_fn_namelen; ++i)
+            cprintf("%c", eip_debuginfo.eip_fn_name[i]);
+        cprintf("+%d\n", eip - eip_debuginfo.eip_fn_addr);  
+
 	}
-	cprintf("\n");
 	return 0;
 }
 
