@@ -62,27 +62,23 @@ int
 mon_backtrace(int argc, char **argv, struct Trapframe *tf)
 {
     struct Eipdebuginfo eip_debuginfo;
-	uint32_t *regs = (uint32_t *)read_ebp(); // Puntero a los registros del stack
+	uint32_t *ebp = (uint32_t *)read_ebp(); // Puntero a los registros del stack
 
-	while (regs > FIRST_EBP_VALUE) { // ebp != de la primera llamada
-		uint32_t *eip = (uint32_t *)*(regs+1);
+	while (ebp > FIRST_EBP_VALUE) { // ebp != de la primera llamada
+		uint32_t *eip = (uint32_t *)*(ebp+1);
 
-		cprintf("ebp %08x ", regs);
+		cprintf("ebp %08x ", ebp);
 		cprintf("eip %08x args ", eip);
-		for (uint32_t i = 2; i < REG_AMNT+1; i++) { // OBTENGO LOS REGISTROS 
-			cprintf("%08x ", *(regs+i));
+		for (uint32_t i = 2; i < REG_AMNT+1; i++) { // Obtengo los argumentos
+			cprintf("%08x ", *(ebp+i));
 		}
 		cprintf("\n");
-		regs = (uint32_t *)*regs;
+		ebp = (uint32_t *)*ebp;
 
-        debuginfo_eip((uintptr_t)eip, &eip_debuginfo);  
-        cprintf("%s:%d: ", eip_debuginfo.eip_file, eip_debuginfo.eip_line);  
-        // Como eip_fn_name no tiene fin de string
-        // imprimo por caracter hasta el largo del nombre.
-        for (int i = 0; i < eip_debuginfo.eip_fn_namelen; ++i)
-            cprintf("%c", eip_debuginfo.eip_fn_name[i]);
-        cprintf("+%d\n", eip - eip_debuginfo.eip_fn_addr);  
-
+        debuginfo_eip((uintptr_t)eip, &eip_debuginfo);
+        cprintf("%s:%d: ", eip_debuginfo.eip_file, eip_debuginfo.eip_line);
+        cprintf("%.*s", eip_debuginfo.eip_fn_namelen, eip_debuginfo.eip_fn_name);
+        cprintf("+%d\n", (uintptr_t)eip - eip_debuginfo.eip_fn_addr);
 	}
 	return 0;
 }
