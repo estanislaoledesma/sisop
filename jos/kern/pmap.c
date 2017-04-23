@@ -103,7 +103,15 @@ boot_alloc(uint32_t n)
 	//
 	// LAB 2: Your code here.
 
-	return NULL;
+	result = nextfree;
+
+	if (n > 0) {
+		// Calculo la cantidad de paginas que ocupa n.
+		uint32_t cant_pages_n =  ROUNDUP(n, PGSIZE);
+		nextfree += cant_pages_n;
+	}
+
+	return result;
 }
 
 // Set up a two-level page table:
@@ -125,7 +133,7 @@ mem_init(void)
 	i386_detect_memory();
 
 	// Remove this line when you're ready to test this function.
-	panic("mem_init: This function is not finished\n");
+	//panic("mem_init: This function is not finished\n");
 
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
@@ -253,8 +261,31 @@ page_init(void)
 	// Change the code to reflect this.
 	// NB: DO NOT actually touch the physical memory corresponding to
 	// free pages!
-	size_t i;
-	for (i = 0; i < npages; i++) {
+
+	int phy_io_inicio = IOPHYSMEM;
+	int phy_io_fin = EXTPHYSMEM;
+
+	int phy_pages_inicio = (int)pages - KERNBASE;
+	int phy_pages_fin = (int)pages + (sizeof(struct PageInfo)*npages) - KERNBASE;
+
+	unsigned int i;
+	for (i = 1; i < npages; i++) {
+		int phy_page = i * PGSIZE;
+
+		// Seccion de 384K para I/O
+		if ( (phy_page >= phy_io_inicio && phy_page < phy_io_fin) ||
+
+		// Region donde se encuentra el codigo del kernel.
+		// En boot_aloc() aclara que la primer direc dada, que se asigna a pages,
+		// es aquella que el linker no asigno al codigo del kernel.
+			(phy_page >= phy_io_fin && phy_page < phy_pages_inicio) ||
+
+		// La memoria ya asignada por boot_alloc()
+			(phy_page >= phy_pages_inicio && phy_page < phy_pages_fin) )
+		{
+			continue;
+		}
+
 		pages[i].pp_ref = 0;
 		pages[i].pp_link = page_free_list;
 		page_free_list = &pages[i];
@@ -276,8 +307,20 @@ page_init(void)
 struct PageInfo *
 page_alloc(int alloc_flags)
 {
-	// Fill this function in
-	return 0;
+	// out of free memory: todas las paginas estan ocupadas
+	if (!page_free_list)
+		return NULL;
+
+	struct PageInfo *page_aux = page_free_list;
+	// Saco la pagina de la lista de paginas libres
+	page_free_list = page_free_list->pp_link;
+
+	if (alloc_flags & ALLOC_ZERO) {
+		memset(page2kva(page_aux), '\0', PGSIZE);
+	}
+
+	page_aux->pp_link = NULL;
+	return page_aux;
 }
 
 //
@@ -290,6 +333,11 @@ page_free(struct PageInfo *pp)
 	// Fill this function in
 	// Hint: You may want to panic if pp->pp_ref is nonzero or
 	// pp->pp_link is not NULL.
+	if (pp->pp_ref != 0 || pp->pp_link != NULL) {
+		panic("page_free: can't free a page that is already free\n");
+	}
+	pp->pp_link = page_free_list;
+	page_free_list = pp;
 }
 
 //
