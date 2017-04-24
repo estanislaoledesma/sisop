@@ -380,7 +380,7 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 	uint32_t pdx = PDX(va);
 
 	// La page table no existe
-	if (!(pgdir[pdx] & PTE_P)) {
+	if (pgdir[pdx] == 0) {
 		if (!create) {
 			return NULL;
 		}
@@ -454,13 +454,15 @@ page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 	if (pte == NULL) {
 		return -E_NO_MEM;
 	}
-	// Se incrementa antes de comprobar que haya una pagina asignada
-	// a 'va', para en caso que se re-inserte la misma pagina
+	// Se incrementa antes de comprobar que haya una pagina asignada a 'va',
+	// para que en el corner-case no se libere esta pagina.
 	pp->pp_ref += 1;
+
 	// Ya hay una pagina asignada a 'va'
 	if (*pte & PTE_P) {
 		page_remove(pgdir, va);
 	}
+	// Tanto page directories como page tables almacenan direcciones físicas
 	*pte = page2pa(pp) | perm | PTE_P;
 	return 0;
 }
