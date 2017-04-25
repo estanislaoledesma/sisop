@@ -376,11 +376,11 @@ page_decref(struct PageInfo* pp)
 pte_t *
 pgdir_walk(pde_t *pgdir, const void *va, int create)
 {
-	// Page directory index
-	uint32_t pdx = PDX(va);
+	// Page directory entry
+	uint32_t pde = PDX(va);
 
 	// La page table no existe
-	if (pgdir[pdx] == 0) {
+	if ( !(pgdir[pde] & PTE_P) ) {
 		if (!create) {
 			return NULL;
 		}
@@ -393,15 +393,15 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 		page->pp_ref += 1;
 		// los permisos de la pagina son mas permisivos que lo
 		// estrictamente necesario (Hint2)
-		pgdir[pdx] = page2pa(page) | PTE_P | PTE_W | PTE_U;
+		pgdir[pde] = page2pa(page) | PTE_P | PTE_W | PTE_U;
 	}
 
 	// Page table
 	// Se debe devolver una direccion virtual
-	pte_t *ptable = KADDR(PTE_ADDR(pgdir[pdx]));
-	// Page table index
-	uint32_t ptx = PTX(va);
-	return ptable+ptx;
+	pte_t *ptable = KADDR(PTE_ADDR(pgdir[pde]));
+	// Page table entry
+	uint32_t pte = PTX(va);
+	return ptable+pte;
 }
 
 //
@@ -455,7 +455,8 @@ page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 		return -E_NO_MEM;
 	}
 	// Se incrementa antes de comprobar que haya una pagina asignada a 'va',
-	// para que en el corner-case no se libere esta pagina.
+	// para que en el corner-case no se libere esta pagina, y al ser asignada
+	// tenga la cantidad de referencias correctas
 	pp->pp_ref += 1;
 
 	// Ya hay una pagina asignada a 'va'
@@ -489,8 +490,9 @@ page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
 	if (pte_store != 0) {
 		*pte_store = pte;
 	}
-	physaddr_t phy_adrr_page = PTE_ADDR(*pte);
-	return pa2page(phy_adrr_page);
+	// ppn: physical page number
+	physaddr_t ppn = PTE_ADDR(*pte);
+	return pa2page(ppn);
 }
 
 //
@@ -518,6 +520,8 @@ page_remove(pde_t *pgdir, void *va)
 
 	page_decref(pp);
 	*pte = 0;
+	// TLB (Translation Lookaside Buffer) es una cache que 
+	// tiene la traduccion de las ultimas paginas usadas
 	tlb_invalidate(pgdir, va);
 }
 
