@@ -418,7 +418,20 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 static void
 boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
 {
-	// Fill this function in
+	size_t size_aux = 0;
+	while(size_aux < size) {
+		pte_t *pte = pgdir_walk(pgdir, va, true);
+		// No se pudo alocar la page table
+		if (pte == NULL) {
+			return;
+		}
+		// Mapea la direccion fisica pa con la virtual va.
+		*pte = pa | perm | PTE_P;
+		
+		// va and pa are both page-aligned
+		va += PGSIZE;
+		pa += PGSIZE;
+		size_aux += PGSIZE;
 }
 
 //
