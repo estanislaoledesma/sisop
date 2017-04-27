@@ -8,13 +8,21 @@ page2pa
 
 boot_alloc_pos
 --------------
-
-...
-
+a)
+f0117950 B end (nm kernel)
+nextfree = ROUNDUP((char *) end, PGSIZE) = ROUNDUP(0xf0117950, 0x1000)
+         = ROUNDDOWN(0xf0117950 + 0x1000 - 0x1, 0x1000)
+         = ROUNDDOWN(0xf011894f, 0x1000) = 0xf011894f + 0xf011894f % 0x1000
+         = 0xf011894f + 0x94f 
+         = 0xf011929e
+b)
+segmentation-fault?
 
 page_alloc
 ----------
-
-...
+La función page2pa() toma una página (puntero a PageInfo) y devuelve su
+dirección física. La función page2kva obtiene la dirección física de la
+página pasada por parámetro, pero luego le aplica la macro KADDR que de-
+vuelve la correspondiente página virtual del kernel.
 
 
