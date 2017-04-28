@@ -420,7 +420,7 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 {
 	size_t size_aux = 0;
 	while(size_aux < size) {
-		pte_t *pte = pgdir_walk(pgdir, va, true);
+		pte_t *pte = pgdir_walk(pgdir, (void*) va, true);
 		// No se pudo alocar la page table
 		if (pte == NULL) {
 			return;
