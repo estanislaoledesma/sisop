@@ -109,6 +109,11 @@ boot_alloc(uint32_t n)
 		// Calculo la cantidad de paginas que ocupa n.
 		uint32_t cant_pages_n =  ROUNDUP(n, PGSIZE);
 		nextfree += cant_pages_n;
+
+		// En el comienzo el kernel solo dispone de una pagina (4 MB)
+		// para trabajar.
+		if((uintptr_t)nextfree >= 0xf0400000)
+			panic("boot_alloc: out of memory");
 	}
 
 	return result;
@@ -205,7 +210,7 @@ mem_init(void)
 	// we just set up the mapping anyway.
 	// Permissions: kernel RW, user NONE
 	// Your code goes here:
-	boot_map_region(kern_pgdir, KERNBASE, -KERNBASE, 0x0, PTE_W);
+	boot_map_region(kern_pgdir, KERNBASE, 0x100000000-KERNBASE, 0x0, PTE_W);
 
 	// Check that the initial page directory has been set up correctly.
 	check_kern_pgdir();
