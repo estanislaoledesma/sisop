@@ -139,7 +139,7 @@ mem_init(void)
 	i386_detect_memory();
 
 	// Remove this line when you're ready to test this function.
-	panic("mem_init: This function is not finished\n");
+	//panic("mem_init: This function is not finished\n");
 
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
@@ -170,6 +170,8 @@ mem_init(void)
 	// Make 'envs' point to an array of size 'NENV' of 'struct Env'.
 	// LAB 3: Your code here.
 
+	// Se debe modificar page_init() ya que estamos alocando paginas y
+	// no deben ser marcadas como libres.
 	envs = (struct Env*) boot_alloc(sizeof(struct Env)*NENV);
 	memset(envs, 0, sizeof(struct Env)*NENV);
 
@@ -204,6 +206,8 @@ mem_init(void)
 	//    - the new image at UENVS  -- kernel R, user R
 	//    - envs itself -- kernel RW, user NONE
 	// LAB 3: Your code here.
+
+	boot_map_region(kern_pgdir, UENVS, ROUNDUP(sizeof(struct Env)*NENV, PGSIZE), PADDR(envs), PTE_U);
 
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
@@ -292,6 +296,9 @@ page_init(void)
 	int phy_pages_inicio = (int)pages - KERNBASE;
 	int phy_pages_fin = (int)pages + (sizeof(struct PageInfo)*npages) - KERNBASE;
 
+	int phy_envs_inicio = (int)envs - KERNBASE;
+	int phy_envs_fin = (int)envs + (sizeof(struct Env)*NENV) - KERNBASE;
+
 	unsigned int i;
 	for (i = 1; i < npages; i++) {
 		int phy_page = i * PGSIZE;
@@ -305,7 +312,9 @@ page_init(void)
 			(phy_page >= phy_io_fin && phy_page < phy_pages_inicio) ||
 
 		// La memoria ya asignada por boot_alloc()
-			(phy_page >= phy_pages_inicio && phy_page < phy_pages_fin) )
+			(phy_page >= phy_pages_inicio && phy_page < phy_pages_fin) ||
+
+			(phy_page >= phy_envs_inicio && phy_page < phy_envs_fin))
 		{
 			continue;
 		}
