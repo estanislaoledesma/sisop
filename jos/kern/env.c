@@ -113,7 +113,7 @@ env_init(void)
 {
 	// Set up envs array
 	// LAB 3: Your code here.
-	for (int i = 0; i < NENV-1, ++i) {
+	for (int i = 0; i < NENV-1; ++i) {
 		envs[i].env_id = 0;
 		envs[i].env_link = &envs[i+1];
 	}
@@ -185,6 +185,13 @@ env_setup_vm(struct Env *e)
 	//    - The functions in kern/pmap.h are handy.
 
 	// LAB 3: Your code here.
+
+	// You need to increment env_pgdir's pp_ref for env_free to work correctly.
+	p->pp_ref += 1;
+	e->env_pgdir = page2kva(p);
+	// Copia la informacion que posee el pgdir del kernel (user pages, kernel stack, etc)
+	// en el pgdir del proceso. 
+	memcpy(e->env_pgdir, kern_pgdir, PGSIZE);
 
 	// UVPT maps the env's own page table read-only.
 	// Permissions: kernel R, user R
