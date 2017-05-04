@@ -288,9 +288,9 @@ region_alloc(struct Env *e, void *va, size_t len)
 		if (!page) {
 			panic("region_alloc: no hay paginas libres");
 		}
-		int pi = page_insert(e->env_pgdir, page, va, PTE_W | PTE_U);
-		if (pi<0) {
-			panic("region_alloc: no se pudo alocar page table");
+		int r = page_insert(e->env_pgdir, page, va, PTE_W | PTE_U);
+		if (r<0) {
+			panic("region_alloc: %e", r);
 		}
 		va_aux += PGSIZE;
 	}
@@ -355,6 +355,46 @@ load_icode(struct Env *e, uint8_t *binary)
 	// at virtual address USTACKTOP - PGSIZE.
 
 	// LAB 3: Your code here.
+
+	// Se adapta la funcion bootmain() en boot/main.c
+	struct Proghdr *ph, *eph;
+
+	// El codigo no se carga del sistema de archivos. En cambio, se
+	// utiliza el puntero al binario ELF.
+	struct Elf *ELFHDR = (struct Elf*) binary;
+	
+	// is this a valid ELF?
+	if (ELFHDR->e_magic != ELF_MAGIC)
+		panic("load_icode: binary no es un ELF válido");
+
+	// load each program segment (ignores ph flags)
+	ph = (struct Proghdr *) ((uint8_t *) ELFHDR + ELFHDR->e_phoff);
+	eph = ph + ELFHDR->e_phnum;
+
+	// Se cambia CR3 a env_pgdir para copiar los filezs bytes todos juntos,
+	// en vez de copiar de a 4KB, en memcpy(). Luego de copiar se debe
+	// volver CR3 a su valor anterior.
+	lcr3(PADDR(e->env_pgdir))
+
+	for (; ph < eph; ph++) {
+		if (ph->p_type == ELF_PROG_LOAD) {
+			if (ph->p_filesz > ph->p_memsz){
+				panic("load_icode: file size debe ser <= a mem size");
+			}
+			region_alloc(e, ph->p_va, ph->p_memsz);
+			memcpy(ph->p_va, binary+ph->p_offset, ph->p_filesz);
+			memset(ph->p_va+ph->p_filesz, 0, ph->p_va+ph->p_memsz);
+		}
+	}
+
+	// Se restaura el valor de CR3
+	lcr3(PADDR(e->env_pgdir))
+
+	// call the entry point from the ELF header
+	// note: does not return!
+	((void (*)(void)) (ELFHDR->e_entry))();
+
+	region_alloc(e, USTACKTOP - PGSIZE, PGSIZE);
 }
 
 //
