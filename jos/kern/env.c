@@ -374,27 +374,27 @@ load_icode(struct Env *e, uint8_t *binary)
 	// Se cambia CR3 a env_pgdir para copiar los filezs bytes todos juntos,
 	// en vez de copiar de a 4KB, en memcpy(). Luego de copiar se debe
 	// volver CR3 a su valor anterior.
-	lcr3(PADDR(e->env_pgdir))
+	lcr3(PADDR(e->env_pgdir));
 
 	for (; ph < eph; ph++) {
 		if (ph->p_type == ELF_PROG_LOAD) {
 			if (ph->p_filesz > ph->p_memsz){
 				panic("load_icode: file size debe ser <= a mem size");
 			}
-			region_alloc(e, ph->p_va, ph->p_memsz);
-			memcpy(ph->p_va, binary+ph->p_offset, ph->p_filesz);
-			memset(ph->p_va+ph->p_filesz, 0, ph->p_va+ph->p_memsz);
+			region_alloc(e, (void*)ph->p_va, ph->p_memsz);
+			memcpy((void*)ph->p_va, binary+ph->p_offset, ph->p_filesz);
+			memset((void*)ph->p_va+ph->p_filesz, 0, ph->p_va+ph->p_memsz);
 		}
 	}
 
 	// Se restaura el valor de CR3
-	lcr3(PADDR(e->env_pgdir))
+	lcr3(PADDR(e->env_pgdir));
 
 	// call the entry point from the ELF header
 	// note: does not return!
 	((void (*)(void)) (ELFHDR->e_entry))();
 
-	region_alloc(e, USTACKTOP - PGSIZE, PGSIZE);
+	region_alloc(e, (void*)(USTACKTOP - PGSIZE), PGSIZE);
 }
 
 //
@@ -407,7 +407,13 @@ load_icode(struct Env *e, uint8_t *binary)
 void
 env_create(uint8_t *binary, enum EnvType type)
 {
-	// LAB 3: Your code here.
+	struct Env *e;
+	int err = env_alloc(&e, 0);
+	if (err < 0) {
+		panic("env_create: %e", err);
+	}
+	load_icode(e, binary);
+	e->env_type = type;
 }
 
 //
@@ -525,5 +531,14 @@ env_run(struct Env *e)
 
 	// LAB 3: Your code here.
 
-	panic("env_run not yet implemented");
+	//panic("env_run not yet implemented");
+
+	if (!curenv && curenv->env_status == ENV_RUNNING) {
+		curenv->env_type = ENV_RUNNABLE;
+	}
+	curenv = e;
+	curenv->env_status = ENV_RUNNING;
+	curenv->env_runs += 1;
+	lcr3(PADDR(curenv->env_pgdir));
+	env_pop_tf(&curenv->env_tf);
 }
