@@ -43,14 +43,15 @@ env_alloc
 env_init_percpu
 ---------------
 
-...
-
+Se escriben 6*13*4 = 312 bytes por cada descriptor de segmento (6 descriptores, 13compunentes del struct Segdesc de 4 bytes) dentro de la gdt (donde escribe lgdt).
+No se pueden usar distintas gdks para procesos en paralelo, porque estas definen privilegios, entonces ambas podrían estar ejecutando instrucciones de kernel.
 
 env_pop_tf
 ----------
 
-...
-
+1. Luego del primer movl de la función, en el registro %esp está el puntero a Trapframe tf. 
+2. Después del último iret, el %esp contiene el registro %eip de tf.
+3. Para chequear si hay un cambio en el nivel de privilegios, el procesador debe chequear los bits de CPL (current privilege level) y DPL (descriptor privilege level) del segmento de código de regreso del IRET. Si DPL es mayor a CPL, se produjo un cambio de nivel.
 
 gdb_hello
 ---------
