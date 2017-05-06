@@ -288,7 +288,7 @@ region_alloc(struct Env *e, void *va, size_t len)
 		if (!page) {
 			panic("region_alloc: no hay paginas libres");
 		}
-		int r = page_insert(e->env_pgdir, page, va, PTE_W | PTE_U);
+		int r = page_insert(e->env_pgdir, page, va_aux, PTE_W | PTE_U);
 		if (r<0) {
 			panic("region_alloc: %e", r);
 		}
@@ -383,16 +383,14 @@ load_icode(struct Env *e, uint8_t *binary)
 			}
 			region_alloc(e, (void*)ph->p_va, ph->p_memsz);
 			memcpy((void*)ph->p_va, binary+ph->p_offset, ph->p_filesz);
-			memset((void*)ph->p_va+ph->p_filesz, 0, ph->p_va+ph->p_memsz);
+			memset((void*)ph->p_va+ph->p_filesz, 0, ph->p_memsz-ph->p_filesz);
 		}
 	}
 
 	// Se restaura el valor de CR3
-	lcr3(PADDR(e->env_pgdir));
+	lcr3(PADDR(kern_pgdir));
 
-	// call the entry point from the ELF header
-	// note: does not return!
-	((void (*)(void)) (ELFHDR->e_entry))();
+	e->env_tf.tf_eip = ELFHDR->e_entry;
 
 	region_alloc(e, (void*)(USTACKTOP - PGSIZE), PGSIZE);
 }
@@ -413,6 +411,7 @@ env_create(uint8_t *binary, enum EnvType type)
 		panic("env_create: %e", err);
 	}
 	load_icode(e, binary);
+	e->env_parent_id = 0;
 	e->env_type = type;
 }
 
@@ -533,7 +532,7 @@ env_run(struct Env *e)
 
 	//panic("env_run not yet implemented");
 
-	if (!curenv && curenv->env_status == ENV_RUNNING) {
+	if (curenv != NULL && curenv->env_status == ENV_RUNNING) {
 		curenv->env_type = ENV_RUNNABLE;
 	}
 	curenv = e;
