@@ -67,7 +67,7 @@ trap_init(void)
 	SETGATE(idt[0], 0, GD_KT, , 0);
 	SETGATE(idt[1], 0, GD_KT, , 0);
 	SETGATE(idt[2], 0, GD_KT, , 0);
-	SETGATE(idt[3], 0, GD_KT, , 0);
+	SETGATE(idt[3], 0, GD_KT, , 3);
 	SETGATE(idt[4], 0, GD_KT, , 0);
 	SETGATE(idt[5], 0, GD_KT, , 0);
 	SETGATE(idt[6], 0, GD_KT, , 0);
@@ -160,14 +160,25 @@ trap_dispatch(struct Trapframe *tf)
 {
 	// Handle processor exceptions.
 	// LAB 3: Your code here.
+	switch (tf->tf_trapno) {
+		case T_BRKPT:
+			print_trapframe(tf);
+			monitor(tf);
+			break;
 
-	// Unexpected trap: The user process or the kernel has a bug.
-	print_trapframe(tf);
-	if (tf->tf_cs == GD_KT)
-		panic("unhandled trap in kernel");
-	else {
-		env_destroy(curenv);
-		return;
+		case T_PGFLT:
+			page_fault_handler(tf);
+			break;
+
+		default:
+			// Unexpected trap: The user process or the kernel has a bug.
+			print_trapframe(tf);
+			if (tf->tf_cs == GD_KT)
+				panic("unhandled trap in kernel");
+			else {
+				env_destroy(curenv);
+				return;
+			}
 	}
 }
 
