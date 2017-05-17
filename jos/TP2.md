@@ -43,7 +43,7 @@ env_alloc
 env_init_percpu
 ---------------
 
-Se escriben 6*13*4 = 312 bytes por cada descriptor de segmento (6 descriptores, 13compunentes del struct Segdesc de 4 bytes) dentro de la gdt (donde escribe lgdt).
+Se escriben 6*13*4 = 312 bytes por cada descriptor de segmento (6 descriptores, 13 componentes del struct Segdesc de 4 bytes) dentro de la gdt (donde escribe lgdt).
 No se pueden usar distintas gdks para procesos en paralelo, porque estas definen privilegios, entonces ambas podrían estar ejecutando instrucciones de kernel.
 
 env_pop_tf

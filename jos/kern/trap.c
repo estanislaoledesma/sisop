@@ -57,6 +57,25 @@ trapname(int trapno)
 	return "(unknown trap)";
 }
 
+void divide();
+void debug();
+void nmi();
+void brkpt();
+void oflow();
+void bound_check();
+void illop();
+void device();
+void dblflt();
+void tss();
+void segnp();
+void stack();
+void gpflt();
+void pgflt();
+void fperr();
+void align();
+void mchk();
+void simderr();
+void t_syscall();
 
 void
 trap_init(void)
@@ -64,25 +83,25 @@ trap_init(void)
 	extern struct Segdesc gdt[];
 
 	// LAB 3: Your code here.
-	SETGATE(idt[0], 1, GD_KT, , 0);
-	SETGATE(idt[1], 1, GD_KT, , 0);
-	SETGATE(idt[2], 0, GD_KT, , 0);
-	SETGATE(idt[3], 1, GD_KT, , 3);
-	SETGATE(idt[4], 1, GD_KT, , 0);
-	SETGATE(idt[5], 1, GD_KT, , 0);
-	SETGATE(idt[6], 1, GD_KT, , 0);
-	SETGATE(idt[7], 1, GD_KT, , 0);
-	SETGATE(idt[8], 1, GD_KT, , 0);
-	SETGATE(idt[10], 1, GD_KT, , 0);
-	SETGATE(idt[11], 1, GD_KT, , 0);
-	SETGATE(idt[12], 1, GD_KT, , 0);
-	SETGATE(idt[13], 1, GD_KT, , 0);
-	SETGATE(idt[14], 1, GD_KT, , 0);
-	SETGATE(idt[16], 1, GD_KT, , 0);
-	SETGATE(idt[17], 1, GD_KT, , 0);
-	SETGATE(idt[18], 1, GD_KT, , 0);
-	SETGATE(idt[19], 1, GD_KT, , 0);
-	SETGATE(idt[48], 1, GD_KT, , 3);
+	SETGATE(idt[0], 1, GD_KT, divide, 0);
+	SETGATE(idt[1], 1, GD_KT, debug, 0);
+	SETGATE(idt[2], 0, GD_KT, nmi, 0);
+	SETGATE(idt[3], 1, GD_KT, brkpt, 3);
+	SETGATE(idt[4], 1, GD_KT, oflow, 0);
+	SETGATE(idt[5], 1, GD_KT, bound_check, 0);
+	SETGATE(idt[6], 1, GD_KT, illop, 0);
+	SETGATE(idt[7], 1, GD_KT, device, 0);
+	SETGATE(idt[8], 1, GD_KT, dblflt, 0);
+	SETGATE(idt[10], 1, GD_KT, tss, 0);
+	SETGATE(idt[11], 1, GD_KT, segnp, 0);
+	SETGATE(idt[12], 1, GD_KT, stack, 0);
+	SETGATE(idt[13], 1, GD_KT, gpflt, 0);
+	SETGATE(idt[14], 1, GD_KT, pgflt, 0);
+	SETGATE(idt[16], 1, GD_KT, fperr, 0);
+	SETGATE(idt[17], 1, GD_KT, align, 0);
+	SETGATE(idt[18], 1, GD_KT, mchk, 0);
+	SETGATE(idt[19], 1, GD_KT, simderr, 0);
+	SETGATE(idt[48], 1, GD_KT, t_syscall, 3);
 
 	// Per-CPU setup
 	trap_init_percpu();
@@ -174,7 +193,9 @@ trap_dispatch(struct Trapframe *tf)
 		case T_SYSCALL:
 			// Ver lib/syscall.c para que los parametros de la
 			// función respeten la convención de llamada de JOS.
-			// Syscall guarda el valor de retorno de la "system call function" en %eax.
+
+			// Syscall guarda el valor de retorno de la "system call function" en %eax
+			// para que sea utilizado por el proceso del usuario.
 			tf->tf_regs.reg_eax = syscall(tf->tf_regs.reg_eax, tf->tf_regs.reg_edx,
 										  tf->tf_regs.reg_ecx, tf->tf_regs.reg_ebx,
 										  tf->tf_regs.reg_edi, tf->tf_regs.reg_esi);
