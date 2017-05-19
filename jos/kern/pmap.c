@@ -611,7 +611,7 @@ int
 user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 {
 	// LAB 3: Your code here.
-	uint32_t addr = ROUNDDOWN(va, PGSIZE);
+	uint32_t addr = ROUNDDOWN((uint32_t)va, PGSIZE);
 	uint32_t end = ROUNDUP((uint32_t)va + len, PGSIZE);
 	while (addr < end) {
 		if (addr < ULIM) {
