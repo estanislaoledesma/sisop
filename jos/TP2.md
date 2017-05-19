@@ -58,14 +58,3 @@ gdb_hello
 
 ...
 
-
-user_evilhello
---------------
-
-Al correr el programa user_evilhello del enunciado, hay un user fault
-al ejecutar el sys_cputs. Ya que dentro de esta función se comprueban
-los permisos del usuario al acceder a este segmento de memoria.
-
-umain a diferencia de evilhello, lo que hace es declarar una nueva 
-variable local first que tiene el valor del primer byte del entry point
-del kernel como caracter. Pero este es una copia, no es el mismo valor en esa posición de memoria.
