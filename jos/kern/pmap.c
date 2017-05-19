@@ -206,7 +206,6 @@ mem_init(void)
 	//    - the new image at UENVS  -- kernel R, user R
 	//    - envs itself -- kernel RW, user NONE
 	// LAB 3: Your code here.
-
 	boot_map_region(kern_pgdir, UENVS, ROUNDUP(sizeof(struct Env)*NENV, PGSIZE), PADDR(envs), PTE_U);
 
 	//////////////////////////////////////////////////////////////////////
@@ -454,6 +453,7 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 static void
 boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
 {
+//#ifndef TP1_PSE
 	size_t size_aux = 0;
 	while(size_aux < size) {
 		pte_t *pte = pgdir_walk(pgdir, (void*) va, true);
@@ -469,7 +469,42 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 		pa += PGSIZE;
 		size_aux += PGSIZE;
 	}
-}
+/*#else
+	// Para que va sea una direc alineada a 22 bits 
+	// los 22 bits menos significativos deben ser 0.
+	if(!(va<<12)) {
+		cprintf("PGDIR: %x\n", pgdir);
+
+		size_t size_aux = 0;
+		while(size_aux < size) {
+			// Page directory entry
+			uint32_t pde = PDX(va);
+			// Mapea la direccion fisica pa con la virtual va.
+			pgdir[pde] = pa | perm | PTE_P;
+
+			va += 4194304; // 4MB
+			pa += 4194304;
+			size_aux += 4194304;
+		}
+	} else {
+		size_t size_aux = 0;
+		while(size_aux < size) {
+			pte_t *pte = pgdir_walk(pgdir, (void*) va, true);
+			// No se pudo alocar la page table
+			if (pte == NULL) {
+				return;
+			}
+			// Mapea la direccion fisica pa con la virtual va.
+			*pte = pa | perm | PTE_P;
+		
+			// va and pa are both page-aligned
+			va += PGSIZE;
+			pa += PGSIZE;
+			size_aux += PGSIZE;
+		}
+	}
+#endif
+*/}
 
 //
 // Map the physical page 'pp' at virtual address 'va'.
@@ -828,6 +863,7 @@ check_kern_pgdir(void)
 		}
 	}
 	cprintf("check_kern_pgdir() succeeded!\n");
+
 
 #if defined(TP1_PSE)  // Avoid literal “ifdef”, the grading script greps for it.
 	uint32_t kern_pdx = PDX(KERNBASE);
