@@ -655,6 +655,7 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// Hint: The staff solution uses boot_map_region.
 	//
 	// Your code here:
+<<<<<<< HEAD
 	
 	void* ret = (void*)base;
 	size_t size_mult = ROUNDUP(size, PGSIZE);
@@ -667,6 +668,9 @@ mmio_map_region(physaddr_t pa, size_t size)
 		
 	return ret;
 	
+=======
+	panic("mmio_map_region not implemented");
+>>>>>>> a84c7148a66d984267955cd9731c2a05b2c28614
 }
 
 static uintptr_t user_mem_check_addr;
