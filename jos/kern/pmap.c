@@ -255,6 +255,8 @@ mem_init(void)
 	// Some more checks, only possible after kern_pgdir is installed.
 	check_page_installed_pgdir();
 }
+
+
 // Modify mappings in kern_pgdir to support SMP
 //   - Map the per-CPU stacks in the region [KSTACKTOP-PTSIZE, KSTACKTOP)
 //
@@ -278,15 +280,17 @@ mem_init_mp(void)
 	//
 	// LAB 4: Your code here:
 	
-	boot_map_region(kern_pgdir, KERNBASE, MMIOLIM, PADDR(percpu_kstacks), PTE_W);
-	
+//	boot_map_region(kern_pgdir, KERNBASE, MMIOLIM, PADDR(percpu_kstacks), PTE_W);
+
 	uintptr_t kstack_i = KERNBASE;
 	
 	for(int i = 0; i < NCPU; i++) {
-		boot_map_region(kern_pgdir, kstack_i, ROUNDUP(sizeof(struct PageInfo), KSTKSIZE), PADDR(percpu_kstacks [i]), PTE_W);
+		boot_map_region(kern_pgdir, kstack_i, ROUNDUP(sizeof(struct PageInfo), KSTKSIZE),
+						PADDR(percpu_kstacks[i]), PTE_W);
 		kstack_i -= (KSTKSIZE + KSTKGAP);
 	}
 }
+
 // --------------------------------------------------------------
 // Tracking of physical pages.
 // The 'pages' array has one 'struct PageInfo' entry per physical page.
@@ -655,18 +659,19 @@ mmio_map_region(physaddr_t pa, size_t size)
 	// Hint: The staff solution uses boot_map_region.
 	//
 	// Your code here:
-	
+
 	void* ret = (void*)base;
 	size_t size_mult = ROUNDUP(size, PGSIZE);
-	
+
 	if (base + size_mult > MMIOLIM) {
 		panic("MMIO overflow");
 	}
-	
-	boot_map_region(kern_pgdir, base, size_mult, pa, PTE_PCD | PTE_PWT | PTE_W);
-		
-	return ret;
 
+	boot_map_region(kern_pgdir, base, size_mult, pa, PTE_PCD | PTE_PWT | PTE_W);
+
+	base += size_mult;
+
+	return ret;
 }
 
 static uintptr_t user_mem_check_addr;
