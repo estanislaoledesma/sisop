@@ -30,6 +30,32 @@ sched_yield(void)
 
 	// LAB 4: Your code here.
 
+	int i;
+	int limit_loop;
+	if (curenv) {
+		i = ENVX(curenv->env_id)+1;
+		limit_loop = ENVX(curenv->env_id);
+	} else {
+		i = 0;
+		limit_loop = NENV-1;
+	}
+
+	while (i != limit_loop) {
+		if (envs[i].env_status == ENV_RUNNABLE) {
+			env_run(envs+i);
+		}
+		if (i == NENV-1)
+			i=0;
+
+		i++;
+	}
+	// If no envs are runnable, but the environment previously
+	// running on this CPU is still ENV_RUNNING, it's okay to
+	// choose that environment.
+  	if (curenv && curenv->env_status == ENV_RUNNING) {
+  		env_run(curenv);
+	}
+
 	// sched_halt never returns
 	sched_halt();
 }
