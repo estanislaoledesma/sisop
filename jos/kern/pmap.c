@@ -198,7 +198,11 @@ mem_init(void)
 	//      (ie. perm = PTE_U | PTE_P)
 	//    - pages itself -- kernel RW, user NONE
 	// Your code goes here:
-	boot_map_region(kern_pgdir, UPAGES, ROUNDUP(sizeof(struct PageInfo) * npages, PGSIZE), PADDR(pages), PTE_U);
+	boot_map_region(kern_pgdir,
+					UPAGES,
+					ROUNDUP(sizeof(struct PageInfo) * npages, PGSIZE),
+					PADDR(pages),
+					PTE_U);
 
 	//////////////////////////////////////////////////////////////////////
 	// Map the 'envs' array read-only by the user at linear address UENVS
@@ -208,7 +212,11 @@ mem_init(void)
 	//    - envs itself -- kernel RW, user NONE
 	// LAB 3: Your code here.
 
-	boot_map_region(kern_pgdir, UENVS, ROUNDUP(sizeof(struct Env)*NENV, PGSIZE), PADDR(envs), PTE_U);
+	boot_map_region(kern_pgdir,
+					UENVS,
+					ROUNDUP(sizeof(struct Env)*NENV, PGSIZE),
+					PADDR(envs),
+					PTE_U);
 
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
@@ -221,7 +229,11 @@ mem_init(void)
 	//       overwrite memory.  Known as a "guard page".
 	//     Permissions: kernel RW, user NONE
 	// Your code goes here:
-	boot_map_region(kern_pgdir, KSTACKTOP-KSTKSIZE, KSTKSIZE, PADDR(bootstack), PTE_W);
+	boot_map_region(kern_pgdir,
+					KSTACKTOP-KSTKSIZE,
+					KSTKSIZE,
+					PADDR(bootstack),
+					PTE_W);
 
 	//////////////////////////////////////////////////////////////////////
 	// Map all of physical memory at KERNBASE.
@@ -231,7 +243,14 @@ mem_init(void)
 	// we just set up the mapping anyway.
 	// Permissions: kernel RW, user NONE
 	// Your code goes here:
-	boot_map_region(kern_pgdir, KERNBASE, 0x100000000-KERNBASE, 0x0, PTE_W);
+	boot_map_region(kern_pgdir,
+					KERNBASE,
+					0x100000000-KERNBASE,
+					0x0,
+					PTE_W);
+
+	// Modify mappings in kern_pgdir to support SMP
+	mem_init_mp();
 
 	// Check that the initial page directory has been set up correctly.
 	check_kern_pgdir();
@@ -281,18 +300,12 @@ mem_init_mp(void)
 	//     Permissions: kernel RW, user NONE
 	//
 	// LAB 4: Your code here:
-	
+
 	for(uint32_t i = 0; i < NCPU; ++i) {
 		boot_map_region(kern_pgdir, KSTACKTOP - KSTKSIZE - i * (KSTKSIZE + KSTKGAP),
 						KSTKSIZE, PADDR(percpu_kstacks[i]), PTE_W);
 	}
 }
-
-//		uint32_t base = KSTACKTOP - (KSTKSIZE + KSTKGAP);
-//		for (i = 0; i < KSTKSIZE; i += PGSIZE)
-//			assert(check_va2pa(pgdir, base + KSTKGAP + i)
-//				== PADDR(percpu_kstacks[n]) + i);
-
 
 // --------------------------------------------------------------
 // Tracking of physical pages.
@@ -666,7 +679,7 @@ mmio_map_region(physaddr_t pa, size_t size)
 	void* ret = (void*)base;
 	size_t size_mult = ROUNDUP(size, PGSIZE);
 
-	if (base + size_mult > MMIOLIM) {
+	if (base + size_mult >= MMIOLIM) {
 		panic("MMIO overflow");
 	}
 
