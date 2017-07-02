@@ -42,12 +42,8 @@ sched_yield(void)
 		limit_loop = NENV-1;
 	}
 
-	cprintf("i %d.\n", i);
-
 	while (i != limit_loop) {
 		if (envs[i].env_status == ENV_RUNNABLE) {
-			cprintf("run i %d.\n", i);
-
 			env_run(&envs[i]);
 		}
 		if (i == NENV-1)
@@ -56,14 +52,10 @@ sched_yield(void)
 			i++;
 	}
 
-	cprintf("ret i %d.\n", i);
-
 	// If no envs are runnable, but the environment previously
 	// running on this CPU is still ENV_RUNNING, it's okay to
 	// choose that environment.
   	if (curenv && curenv->env_status == ENV_RUNNING) {
-		cprintf("curr i %d.\n", i);
-
   		env_run(curenv);
 	}
 

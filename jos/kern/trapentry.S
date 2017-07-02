@@ -84,12 +84,8 @@ handler18:
 	TRAPHANDLER_NOEC(mchk, T_MCHK);
 handler19:
 	TRAPHANDLER_NOEC(simderr, T_SIMDERR);
-
-
 handler32:
 	TRAPHANDLER_NOEC(clock, IRQ_OFFSET+IRQ_TIMER);
-
-
 handler48:
 	TRAPHANDLER_NOEC(t_syscall, T_SYSCALL);
 

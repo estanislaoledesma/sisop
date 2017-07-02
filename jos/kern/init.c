@@ -74,14 +74,14 @@ i386_init(void)
 //	ENV_CREATE(user_hello, ENV_TYPE_USER);
 
 	/* Tarea: sys_yield */
-	ENV_CREATE(user_yield, ENV_TYPE_USER);
-	ENV_CREATE(user_yield, ENV_TYPE_USER);
-	ENV_CREATE(user_yield, ENV_TYPE_USER);
+//	ENV_CREATE(user_yield, ENV_TYPE_USER);
+//	ENV_CREATE(user_yield, ENV_TYPE_USER);
+//	ENV_CREATE(user_yield, ENV_TYPE_USER);
 
 	/* Tarea: contador_env */
-//	ENV_CREATE(user_contador, ENV_TYPE_USER);
-//	ENV_CREATE(user_contador, ENV_TYPE_USER);
-//	ENV_CREATE(user_contador, ENV_TYPE_USER);
+	ENV_CREATE(user_contador, ENV_TYPE_USER);
+	ENV_CREATE(user_contador, ENV_TYPE_USER);
+	ENV_CREATE(user_contador, ENV_TYPE_USER);
 
 #endif // TEST*
 

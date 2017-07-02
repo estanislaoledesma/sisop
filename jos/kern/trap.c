@@ -83,9 +83,7 @@ void fperr();
 void align();
 void mchk();
 void simderr();
-
 void clock();
-
 void t_syscall();
 
 void
@@ -94,28 +92,28 @@ trap_init(void)
 	extern struct Segdesc gdt[];
 
 	// LAB 3: Your code here.
-	SETGATE(idt[0], 1, GD_KT, divide, 0);
-	SETGATE(idt[1], 1, GD_KT, debug, 0);
+	SETGATE(idt[0], 0, GD_KT, divide, 0);
+	SETGATE(idt[1], 0, GD_KT, debug, 0);
+
 	SETGATE(idt[2], 0, GD_KT, nmi, 0);
-	SETGATE(idt[3], 1, GD_KT, brkpt, 3);
-	SETGATE(idt[4], 1, GD_KT, oflow, 0);
-	SETGATE(idt[5], 1, GD_KT, bound_check, 0);
-	SETGATE(idt[6], 1, GD_KT, illop, 0);
-	SETGATE(idt[7], 1, GD_KT, device, 0);
-	SETGATE(idt[8], 1, GD_KT, dblflt, 0);
-	SETGATE(idt[10], 1, GD_KT, tss, 0);
-	SETGATE(idt[11], 1, GD_KT, segnp, 0);
-	SETGATE(idt[12], 1, GD_KT, stack, 0);
-	SETGATE(idt[13], 1, GD_KT, gpflt, 0);
-	SETGATE(idt[14], 1, GD_KT, pgflt, 0);
-	SETGATE(idt[16], 1, GD_KT, fperr, 0);
-	SETGATE(idt[17], 1, GD_KT, align, 0);
-	SETGATE(idt[18], 1, GD_KT, mchk, 0);
-	SETGATE(idt[19], 1, GD_KT, simderr, 0);
 
+	SETGATE(idt[3], 0, GD_KT, brkpt, 3);
+	SETGATE(idt[4], 0, GD_KT, oflow, 0);
+	SETGATE(idt[5], 0, GD_KT, bound_check, 0);
+	SETGATE(idt[6], 0, GD_KT, illop, 0);
+	SETGATE(idt[7], 0, GD_KT, device, 0);
+	SETGATE(idt[8], 0, GD_KT, dblflt, 0);
+	SETGATE(idt[10], 0, GD_KT, tss, 0);
+	SETGATE(idt[11], 0, GD_KT, segnp, 0);
+	SETGATE(idt[12], 0, GD_KT, stack, 0);
+	SETGATE(idt[13], 0, GD_KT, gpflt, 0);
+	SETGATE(idt[14], 0, GD_KT, pgflt, 0);
+	SETGATE(idt[16], 0, GD_KT, fperr, 0);
+	SETGATE(idt[17], 0, GD_KT, align, 0);
+	SETGATE(idt[18], 0, GD_KT, mchk, 0);
+	SETGATE(idt[19], 0, GD_KT, simderr, 0);
 	SETGATE(idt[IRQ_OFFSET+IRQ_TIMER], 0, GD_KT, clock, 0);
-
-	SETGATE(idt[48], 1, GD_KT, t_syscall, 3);
+	SETGATE(idt[48], 0, GD_KT, t_syscall, 3);
 
 	// Per-CPU setup
 	trap_init_percpu();
