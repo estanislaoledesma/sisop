@@ -32,9 +32,11 @@ sched_yield(void)
 
 	int i;
 	int limit_loop;
-	if (curenv) {
-		i = ENVX(curenv->env_id)+1;
-		limit_loop = ENVX(curenv->env_id);
+	if (curenv && ENVX(curenv->env_id) != NENV-1) {
+		int envID = ENVX(curenv->env_id);
+
+		i = envID+1;
+		limit_loop = envID;
 	} else {
 		i = 0;
 		limit_loop = NENV-1;
@@ -46,9 +48,10 @@ sched_yield(void)
 		}
 		if (i == NENV-1)
 			i=0;
-
-		i++;
+		else
+			i++;
 	}
+
 	// If no envs are runnable, but the environment previously
 	// running on this CPU is still ENV_RUNNING, it's okay to
 	// choose that environment.

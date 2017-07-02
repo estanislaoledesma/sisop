@@ -16,6 +16,7 @@ umain(int argc, char **argv)
 static void
 contador(int linea, int color, int delay)
 {
+/*
 	char counter[40] = { '0' };  // Our ASCII digit counter (RTL).
 
 	while (1) {
@@ -42,4 +43,5 @@ contador(int linea, int color, int delay)
 			*buf++ = color;
 		}
 	}
+*/
 }

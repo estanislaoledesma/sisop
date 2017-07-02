@@ -148,6 +148,7 @@ trap_init_percpu(void)
 	//
 	// LAB 4: Your code here:
 
+/*
 	uint8_t cpuID = thiscpu->cpu_id;
 
 	thiscpu->cpu_ts.ts_esp0 =  KSTACKTOP - cpuID * (KSTKSIZE + KSTKGAP);
@@ -160,8 +161,8 @@ trap_init_percpu(void)
 
 	ltr(GD_TSS0+cpuID);
 	lidt(&idt_pd);
+*/
 
-/*
 	// Setup a TSS so that we get the right stack
 	// when we trap to the kernel.
 	ts.ts_esp0 = KSTACKTOP;
@@ -179,7 +180,7 @@ trap_init_percpu(void)
 
 	// Load the IDT
 	lidt(&idt_pd);
-*/
+
 }
 
 void
@@ -298,10 +299,9 @@ trap(struct Trapframe *tf)
 		assert(curenv);
 		// The lower two-bits of the code segment descriptor will determine the
 		// current privilege level that the code is executing at.
-		if ( curenv->env_tf.tf_cs & 0x3 == 3 )
-			lock_kernel();
 
-		lock_kernel();
+//		if ( (curenv->env_tf.tf_cs & 0x3) == 3 )
+//			lock_kernel();
 
 		// Garbage collect if current enviroment is a zombie
 		if (curenv->env_status == ENV_DYING) {
