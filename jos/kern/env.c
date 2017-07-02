@@ -200,7 +200,11 @@ env_setup_vm(struct Env *e)
 	// Permissions: kernel R, user R
 	e->env_pgdir[PDX(UVPT)] = PADDR(e->env_pgdir) | PTE_P | PTE_U;
 
-//	e->env_pgdir[PDX(VGA_USER)] = 0xb8000;
+
+//	pte_t *pte = pgdir_walk(e->env_pgdir, (void*)VGA_USER, true);
+//	if (pte == NULL)
+//		cprintf("es NULL\n");
+//	*pte = 0xb8000 | PTE_P | PTE_U;
 
 	return 0;
 }
@@ -562,7 +566,7 @@ env_run(struct Env *e)
 	//panic("env_run not yet implemented");
 
 	if (curenv != NULL && curenv->env_status == ENV_RUNNING) {
-		curenv->env_type = ENV_RUNNABLE;
+		curenv->env_status = ENV_RUNNABLE;
 	}
 	curenv = e;
 	curenv->env_status = ENV_RUNNING;

@@ -69,14 +69,14 @@ i386_init(void)
 		ENV_CREATE(TEST, ENV_TYPE_USER);
 #else
 	// Touch all you want.
-	ENV_CREATE(user_hello, ENV_TYPE_USER);
-	ENV_CREATE(user_hello, ENV_TYPE_USER);
-	ENV_CREATE(user_hello, ENV_TYPE_USER);
+//	ENV_CREATE(user_hello, ENV_TYPE_USER);
+//	ENV_CREATE(user_hello, ENV_TYPE_USER);
+//	ENV_CREATE(user_hello, ENV_TYPE_USER);
 
 	/* Tarea: sys_yield */
-//	ENV_CREATE(user_yield, ENV_TYPE_USER);
-//	ENV_CREATE(user_yield, ENV_TYPE_USER);
-//	ENV_CREATE(user_yield, ENV_TYPE_USER);
+	ENV_CREATE(user_yield, ENV_TYPE_USER);
+	ENV_CREATE(user_yield, ENV_TYPE_USER);
+	ENV_CREATE(user_yield, ENV_TYPE_USER);
 
 	/* Tarea: contador_env */
 //	ENV_CREATE(user_contador, ENV_TYPE_USER);
@@ -87,7 +87,7 @@ i386_init(void)
 
 	// Eliminar esta llamada una vez completada la parte 1
 	// e implementado sched_yield().
-	env_run(&envs[0]);
+//	env_run(&envs[0]);
 
 	// Schedule and run the first user environment!
 	sched_yield();

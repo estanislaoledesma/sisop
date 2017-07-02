@@ -106,7 +106,7 @@
 
 //#define VGA_USER MMIOBASE
 // ---O ESTA LINEA---
-//#define VGA_USER KERNBASE+0xb8000
+#define VGA_USER 0x0fffffff
 /* por lo que dice aca
  At IOPHYSMEM (640K) there is a 384K hole for I/O.  From the kernel,
  IOPHYSMEM can be addressed at KERNBASE + IOPHYSMEM.  The hole ends
