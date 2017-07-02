@@ -83,6 +83,9 @@ void fperr();
 void align();
 void mchk();
 void simderr();
+
+void clock();
+
 void t_syscall();
 
 void
@@ -109,6 +112,9 @@ trap_init(void)
 	SETGATE(idt[17], 1, GD_KT, align, 0);
 	SETGATE(idt[18], 1, GD_KT, mchk, 0);
 	SETGATE(idt[19], 1, GD_KT, simderr, 0);
+
+	SETGATE(idt[IRQ_OFFSET+IRQ_TIMER], 0, GD_KT, clock, 0);
+
 	SETGATE(idt[48], 1, GD_KT, t_syscall, 3);
 
 	// Per-CPU setup
@@ -232,6 +238,9 @@ trap_dispatch(struct Trapframe *tf)
 										  tf->tf_regs.reg_ecx, tf->tf_regs.reg_ebx,
 										  tf->tf_regs.reg_edi, tf->tf_regs.reg_esi);
 			break;
+
+		case IRQ_OFFSET+IRQ_TIMER:
+			sched_yield();
 
 		default:
 			// Unexpected trap: The user process or the kernel has a bug.
