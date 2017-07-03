@@ -88,12 +88,17 @@ sys_exofork(void)
 
 	int err = env_alloc(&child, thiscpu->cpu_env->env_id);
 
-	if (!err) {
+	if (err < 0) {
 		return err;
 	}
 
-	child->env_status =ENV_NOT_RUNNABLE;
+	child->env_status = ENV_NOT_RUNNABLE;
 	child->env_tf = thiscpu->cpu_env->env_tf;
+
+	// El nuevo env retorna 0.
+	child->env_tf.tf_regs.reg_eax = 0;
+
+	cprintf("ID: %d\n\n", child->env_id);
 
 	return child->env_id;
 }
@@ -115,13 +120,13 @@ sys_env_set_status(envid_t envid, int status)
 	// envid's status.
 
 	// LAB 4: Your code here.
-	if (status != ENV_RUNNABLE || status != ENV_NOT_RUNNABLE) {
+	if (status != ENV_RUNNABLE && status != ENV_NOT_RUNNABLE) {
 		return -E_INVAL;
 	}
 
 	struct Env *child = NULL;
 	int err = envid2env(envid, &child, 1);
-	if (err < 0 || !child) {
+	if (err < 0) {
 		return -E_BAD_ENV;
 	}
 
@@ -173,7 +178,7 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 	// LAB 4: Your code here.
 	struct Env *env_act = NULL;
 	int err = envid2env(envid, &env_act, 1);
-	if (err < 0 || !env_act) {
+	if (err < 0) {
 		return -E_BAD_ENV;
 	}
 
@@ -181,7 +186,7 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 		return -E_INVAL;
 	}
 
-	if (!(perm & PTE_SYSCALL)) {
+	if ((perm & (PTE_U|PTE_P)) != (PTE_U|PTE_P)) {
 		return -E_INVAL;
 	}
 
@@ -191,11 +196,12 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 	}
 
 	int err2 = page_insert(env_act->env_pgdir, page_info, va, perm);
-	if (!err2) {
+	if (err2 < 0) {
 		page_free(page_info);
 	}
 
 	return err;	
+
 }
 
 // Map the page of memory at 'srcva' in srcenvid's address space
@@ -227,13 +233,13 @@ sys_page_map(envid_t srcenvid, void *srcva, envid_t dstenvid, void *dstva, int p
 	// LAB 4: Your code here.
 	struct Env *env_src = NULL;
 	int err = envid2env(srcenvid, &env_src, 1);
-	if (err < 0 || !env_src) {
+	if (err < 0) {
 		return -E_BAD_ENV;
 	}
 
 	struct Env *env_dst = NULL;
 	int err2 = envid2env(dstenvid, &env_dst, 1);
-	if (err2 < 0 || !env_dst) {
+	if (err2 < 0) {
 		return -E_BAD_ENV;
 	}
 
@@ -245,12 +251,12 @@ sys_page_map(envid_t srcenvid, void *srcva, envid_t dstenvid, void *dstva, int p
 		return -E_INVAL;
 	}
 
-	if (!(perm & PTE_SYSCALL)) {
+	if ((perm & (PTE_U|PTE_P)) != (PTE_U|PTE_P)) {
 		return -E_INVAL;
 	}
 
 	pte_t *src_pte = pgdir_walk(env_src->env_pgdir, srcva, false);
-	if ((perm & PTE_W) && (*src_pte & PTE_W)) { 
+	if ((perm & PTE_W) && ((*src_pte & PTE_W)==0)) { 
 		return -E_INVAL;
 	}
 
@@ -261,6 +267,7 @@ sys_page_map(envid_t srcenvid, void *srcva, envid_t dstenvid, void *dstva, int p
 
 	*dst_pte = *src_pte;
 	return 0;
+
 }
 
 // Unmap the page of memory at 'va' in the address space of 'envid'.
@@ -278,7 +285,7 @@ sys_page_unmap(envid_t envid, void *va)
 	// LAB 4: Your code here.
 	struct Env *env_act = NULL;
 	int err = envid2env(envid, &env_act, 1);
-	if (err < 0 || !env_act) {
+	if (err < 0) {
 		return -E_BAD_ENV;
 	}
 

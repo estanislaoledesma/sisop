@@ -201,11 +201,11 @@ env_setup_vm(struct Env *e)
 	e->env_pgdir[PDX(UVPT)] = PADDR(e->env_pgdir) | PTE_P | PTE_U;
 
 	// Mapping del buffer VGA
-	struct PageInfo *page_info = pa2page(0xb8000);
-	int err = page_insert(e->env_pgdir, page_info, VGA_USER, PTE_P | PTE_U | PTE_W);
-	if (err < 0) {
-		return -E_NO_MEM;
-	}
+//	struct PageInfo *page_info = pa2page(0xb8000);
+//	int err = page_insert(e->env_pgdir, page_info, VGA_USER, PTE_P | PTE_U | PTE_W);
+//	if (err < 0) {
+//		return -E_NO_MEM;
+//	}
 
 	return 0;
 }

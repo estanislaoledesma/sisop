@@ -44,6 +44,7 @@ sched_yield(void)
 
 	while (i != limit_loop) {
 		if (envs[i].env_status == ENV_RUNNABLE) {
+			cprintf("run env N° = %d\n\n", i);
 			env_run(&envs[i]);
 		}
 		if (i == NENV-1)
