@@ -51,6 +51,7 @@ No runnable environments in the system!
 Las primeras 3 líneas indican que se crearon 3 nuevos procesos (según i386_init). Luego se imprime tres veces "Hello, I am environment ...", según el número de proceso que esté ejecutándose, pero como en umain yield.c, despúes de este print hay un sys_yield (que cede la CPU a otro proceso en estado ENV_RUNNABLE), se imprime una línea de cada proceso en ejecución alternada (según modelo Round Robin). Lo mismo sucede en cada iteración-impresión del programa hasta que alguno termine con sus respectivas iteraciones (5), donde el proceso es desalocado y liberado.
 
 envid2env
+---------
 
 sys_env_destroy(0): llama a envid2env(0), el cual devuelve un puntero al curenv (proceso actual), y luego sys_env_destroy llama a env_destroy, el cual libera el proceso. Finalmente, setea curenv a NULL y ejecuta sched_yield().
 
