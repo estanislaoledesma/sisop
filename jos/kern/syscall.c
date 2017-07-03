@@ -246,26 +246,26 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 		return -E_BAD_ENV;
 	}
 
-	if (!env_send->env_ipc_recving) {
+	if (!(uint32_t)env_send->env_ipc_recving) {
 		return -E_IPC_NOT_RECV;
 	}
 
-	if (srcva < UTOP && !(srcva % PGSIZE)) {
+	if ((uint32_t)srcva < UTOP && !((uint32_t)srcva % PGSIZE)) {
 		return -E_INVAL;
 	}
 
-	if (srcva < UTOP && !(perm & PTE_SYSCALL)) {
+	if ((uint32_t)srcva < UTOP && !(perm & PTE_SYSCALL)) {
 		return -E_INVAL;
 	}
 
 	pte_t *pte_srcva;
 	struct Env *env_act = thiscpu->cpu_env;
 	struct PageInfo *page_info = page_lookup(env_act->env_pgdir, srcva, &pte_srcva);
-	if (srcva < UTOP && !page_info) {
+	if ((uint32_t)srcva < UTOP && !page_info) {
 		return -E_INVAL;
 	}
 
-	if ((perm & PTE_w) && (*pte_srcva & PTE_W)) { 
+	if ((perm & PTE_W) && (*pte_srcva & PTE_W)) { 
 		return -E_INVAL;
 	}
 
@@ -277,7 +277,7 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 	env_send->env_ipc_from = env_act->env_id;
 	env_send->env_ipc_value = value;
 
-	if (srcva < UTOP) {
+	if ((uint32_t)srcva < UTOP) {
 		env_send->env_ipc_perm |= perm;
 	} else {
 		env_send->env_ipc_perm = 0;
@@ -303,7 +303,7 @@ static int
 sys_ipc_recv(void *dstva)
 {
 	// LAB 4: Your code here.
-	if ((uintptr_t *)dstva < UTOP && !((uintptr_t *)dstva % PGSIZE) ) {
+	if ((uint32_t)dstva < UTOP && !((uint32_t)dstva % PGSIZE) ) {
 		return -E_INVAL;
 	}
 
@@ -313,7 +313,8 @@ sys_ipc_recv(void *dstva)
 	env_act->env_ipc_dstva = dstva;
 	env_act->env_status = ENV_NOT_RUNNABLE;
 
-	return sys_yield();
+	sched_yield();
+	return 0;
 }
 
 // Dispatches to the correct kernel function, passing the arguments.
