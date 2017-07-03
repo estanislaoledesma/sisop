@@ -157,7 +157,6 @@ trap_init_percpu(void)
 									  sizeof(struct Taskstate)-1, 0);
 	gdt[(GD_TSS0 >> 3)+cpuID].sd_s = 0;
 
-
 	// A logical address consists of a 16-bit segment selector (supplying 13+1 address bits)
 	// and a 16-bit offset. The segment selector must be located in one of the segment registers.
 	// That selector consists of a 2-bit Requested Privilege Level (RPL), a 1-bit Table Indicator (TI), and a 13-bit index.
@@ -306,7 +305,7 @@ trap(struct Trapframe *tf)
 		// current privilege level that the code is executing at.
 
 //		if ( (curenv->env_tf.tf_cs & 0x3) == 3 )
-//			lock_kernel();
+			lock_kernel();
 
 		// Garbage collect if current enviroment is a zombie
 		if (curenv->env_status == ENV_DYING) {

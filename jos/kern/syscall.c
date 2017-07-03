@@ -85,7 +85,9 @@ sys_exofork(void)
 
 	// LAB 4: Your code here.
 	struct Env *child;
+
 	int err = env_alloc(&child, thiscpu->cpu_env->env_id);
+
 	if (!err) {
 		return err;
 	}
@@ -406,7 +408,6 @@ sys_ipc_recv(void *dstva)
 
 	sched_yield();
 	return 0;
-
 }
 
 // Dispatches to the correct kernel function, passing the arguments.
