@@ -48,3 +48,15 @@ All done in environment 00001001.
 No runnable environments in the system!
 ```
 
+Las primeras 3 líneas indican que se crearon 3 nuevos procesos (según i386_init). Luego se imprime tres veces "Hello, I am environment ...", según el número de proceso que esté ejecutándose, pero como en umain yield.c, despúes de este print hay un sys_yield (que cede la CPU a otro proceso en estado ENV_RUNNABLE), se imprime una línea de cada proceso en ejecución alternada (según modelo Round Robin). Lo mismo sucede en cada iteración-impresión del programa hasta que alguno termine con sus respectivas iteraciones (5), donde el proceso es desalocado y liberado.
+
+envid2env
+
+sys_env_destroy(0): llama a envid2env(0), el cual devuelve un puntero al curenv (proceso actual), y luego sys_env_destroy llama a env_destroy, el cual libera el proceso. Finalmente, setea curenv a NULL y ejecuta sched_yield().
+
+sys_env_destroy(-1): llama a envid2env(-1), el cual busca el proceso en envs, según el índice obtenido por ENVX (el cual da un índice inválido por ser negativo). Por esto, al comparar el env_id del proceso obtenido con el pasado por parámetro, la función retornará -E_BAD_ENV, el cual es devuelto por sys_env_destroy.
+
+kill(0, 9): 0 es el pid (process id) y 9 es sig (SIGKILL), entonces esta señal es enviada a todos los procesos en el grupo del proceso que hizo la llamada.
+
+kill(-1, 9): la señal es enviada a todos los procesos a los que tenga permisos para enviar señales el proceso que hizo la llamada, excepto a 1 (init).
+
