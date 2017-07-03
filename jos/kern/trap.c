@@ -157,7 +157,12 @@ trap_init_percpu(void)
 									  sizeof(struct Taskstate)-1, 0);
 	gdt[(GD_TSS0 >> 3)+cpuID].sd_s = 0;
 
-
+	// A logical address consists of a 16-bit segment selector (supplying 13+1 address bits)
+	// and a 16-bit offset. The segment selector must be located in one of the segment registers.
+	// That selector consists of a 2-bit Requested Privilege Level (RPL), a 1-bit Table Indicator (TI), and a 13-bit index.
+	// When attempting address translation of a given logical address, the processor reads 
+	// the 64-bit segment descriptor structure from either the Global Descriptor Table when TI=0 or
+	// the Local Descriptor Table when TI=1. 
 	ltr( ((GD_TSS0 >> 3)+cpuID) << 3 );
 	lidt(&idt_pd);
 
