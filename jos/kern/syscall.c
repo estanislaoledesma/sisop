@@ -85,7 +85,9 @@ sys_exofork(void)
 
 	// LAB 4: Your code here.
 	struct Env *child;
+
 	int err = env_alloc(&child, thiscpu->cpu_env->env_id);
+
 	if (!err) {
 		return err;
 	}
@@ -94,7 +96,8 @@ sys_exofork(void)
 	child->env_tf = thiscpu->cpu_env->env_tf;
 	child->env_tf.tf_regs.reg_eax = 0;
 
-	return child->env_id;
+//	return child->env_id;
+	return 0;
 }
 
 // Set envid's env_status to status, which must be ENV_RUNNABLE
