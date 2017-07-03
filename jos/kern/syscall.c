@@ -257,7 +257,7 @@ sys_page_map(envid_t srcenvid, void *srcva, envid_t dstenvid, void *dstva, int p
 		return -E_NO_MEM;
 	}
 
-	memcpy(dst_pte, src_pte, sizeof(pte_t));
+	*dst_pte = *src_pte;
 	return 0;
 }
 
