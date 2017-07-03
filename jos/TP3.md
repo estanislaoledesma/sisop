@@ -60,3 +60,11 @@ kill(0, 9): 0 es el pid (process id) y 9 es sig (SIGKILL), entonces esta señal 
 
 kill(-1, 9): la señal es enviada a todos los procesos a los que tenga permisos para enviar señales el proceso que hizo la llamada, excepto a 1 (init).
 
+dumbfork
+
+1. Si antes de llamar a dumbfork se llama sys_page_alloc reservando una página para el proceso padre, el proceso hijo también la poseerá ya que en dumbfork se hace una llamada a duppage que copia exactamente el address space del padre en el hijo.
+2. 	No, no se preserva ya que duppage() llama a sys_page_alloc y sys_page_map con permisos de escritura.
+3. duppage() hace tres syscalls: primero aloca una página en addr para el proceso cuyo id es envid con permisos de escritura. Luego mapea addr al curenv a la dirección UTEMP. Copia la página en UTEMP a addr. Finalmente deshace el mapeo que realizó anteriormente, desalocando la página que alocó con sys_page_alloc.
+4. Lo que cambiaría con un parámetro que indica si la página debe quedar para solo lectura, es un nuevo if para modificar los permisos que se le pasan a las syscalls.
+5. 
+5.  
