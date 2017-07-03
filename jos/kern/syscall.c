@@ -240,7 +240,52 @@ static int
 sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 {
 	// LAB 4: Your code here.
-	panic("sys_ipc_try_send not implemented");
+	struct Env *env_send = NULL;
+	int err = envid2env(envid, &env_send, 0);
+	if (err < 0 || !env_send) {
+		return -E_BAD_ENV;
+	}
+
+	if (!env_send->env_ipc_recving) {
+		return -E_IPC_NOT_RECV;
+	}
+
+	if (srcva < UTOP && !(srcva % PGSIZE)) {
+		return -E_INVAL;
+	}
+
+	if (srcva < UTOP && !(perm & PTE_SYSCALL)) {
+		return -E_INVAL;
+	}
+
+	pte_t *pte_srcva;
+	struct Env *env_act = thiscpu->cpu_env;
+	struct PageInfo *page_info = page_lookup(env_act->env_pgdir, srcva, &pte_srcva);
+	if (srcva < UTOP && !page_info) {
+		return -E_INVAL;
+	}
+
+	if ((perm & PTE_w) && (*pte_srcva & PTE_W)) { 
+		return -E_INVAL;
+	}
+
+	if (page_insert(env_send->env_pgdir, page_info, srcva, perm) < 0) {
+		return -E_NO_MEM;
+	}
+
+	env_send->env_ipc_recving = 0;
+	env_send->env_ipc_from = env_act->env_id;
+	env_send->env_ipc_value = value;
+
+	if (srcva < UTOP) {
+		env_send->env_ipc_perm |= perm;
+	} else {
+		env_send->env_ipc_perm = 0;
+	}
+
+	env_send->env_status = ENV_RUNNABLE;
+
+	return 0;
 }
 
 // Block until a value is ready.  Record that you want to receive
@@ -258,8 +303,18 @@ static int
 sys_ipc_recv(void *dstva)
 {
 	// LAB 4: Your code here.
-	panic("sys_ipc_recv not implemented");
-	return 0;
+	if ((uintptr_t *)dstva < UTOP && !((uintptr_t *)dstva % PGSIZE) ) {
+		return -E_INVAL;
+	}
+
+	struct Env *env_act = thiscpu->cpu_env;
+	
+	env_act->env_ipc_recving = true;
+	env_act->env_ipc_dstva = dstva;
+	env_act->env_status = ENV_NOT_RUNNABLE;
+
+	return sys_yield();
+
 }
 
 // Dispatches to the correct kernel function, passing the arguments.
