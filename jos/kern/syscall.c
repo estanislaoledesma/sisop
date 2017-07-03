@@ -85,12 +85,16 @@ sys_exofork(void)
 
 	// LAB 4: Your code here.
 	struct Env *child;
-	int ret = env_alloc(&child, thiscpu->cpu_env->env_id);
+	int err = env_alloc(&child, thiscpu->cpu_env->env_id);
+	if (!err) {
+		return err;
+	}
 
 	child->env_status =ENV_NOT_RUNNABLE;
-	memcpy(child->env_tf, thiscpu->cpu_env->env_tf, sizeof(struct Trapframe));
+	child->env_tf = thiscpu->cpu_env->env_tf;
+	child->env_tf.tf_regs.reg_eax = 0;
 
-	return ret;
+	return child->env_id;
 }
 
 // Set envid's env_status to status, which must be ENV_RUNNABLE
@@ -185,8 +189,8 @@ sys_page_alloc(envid_t envid, void *va, int perm)
 		return -E_NO_MEM;
 	}
 
-	int err = page_insert(env_act->env_pgdir, page_info, va, perm);
-	if (!err) {
+	int err2 = page_insert(env_act->env_pgdir, page_info, va, perm);
+	if (!err2) {
 		page_free(page_info);
 	}
 
@@ -227,8 +231,8 @@ sys_page_map(envid_t srcenvid, void *srcva, envid_t dstenvid, void *dstva, int p
 	}
 
 	struct Env *env_dst = NULL;
-	int err = envid2env(dstenvid, &env_dst, 1);
-	if (err < 0 || !env_dst) {
+	int err2 = envid2env(dstenvid, &env_dst, 1);
+	if (err2 < 0 || !env_dst) {
 		return -E_BAD_ENV;
 	}
 
