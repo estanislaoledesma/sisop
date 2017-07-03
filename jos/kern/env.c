@@ -200,11 +200,12 @@ env_setup_vm(struct Env *e)
 	// Permissions: kernel R, user R
 	e->env_pgdir[PDX(UVPT)] = PADDR(e->env_pgdir) | PTE_P | PTE_U;
 
-
-//	pte_t *pte = pgdir_walk(e->env_pgdir, (void*)VGA_USER, true);
-//	if (pte == NULL)
-//		cprintf("es NULL\n");
-//	*pte = 0xb8000 | PTE_P | PTE_U;
+	// Mapping del buffer VGA
+	struct PageInfo *page_info = pa2page(0xb8000);
+	int err = page_insert(e->env_pgdir, page_info, VGA_USER, PTE_P | PTE_U | PTE_W);
+	if (err < 0) {
+		return -E_NO_MEM;
+	}
 
 	return 0;
 }

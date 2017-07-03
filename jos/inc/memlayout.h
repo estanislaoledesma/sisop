@@ -103,15 +103,8 @@
 
 #define ULIM		(MMIOBASE)
 
-
-//#define VGA_USER MMIOBASE
-// ---O ESTA LINEA---
-#define VGA_USER 0x0fffffff
-/* por lo que dice aca
- At IOPHYSMEM (640K) there is a 384K hole for I/O.  From the kernel,
- IOPHYSMEM can be addressed at KERNBASE + IOPHYSMEM.  The hole ends
- at physical address EXTPHYSMEM.
-*/
+// Se utiliza la 'va' UTEMP ya que en su definicion dice: "Used for temporary page mappings"
+#define VGA_USER UTEMP
 
 /*
  * User read-only mappings! Anything below here til UTOP are readonly to user.

@@ -51,12 +51,16 @@ pgfault(struct UTrapframe *utf)
 static int
 duppage(envid_t envid, unsigned pn)
 {
-	int r;
+	int r = 1;
 
 	// LAB 4: Your code here.
-	if (((pn * PGSIZE) & PTE_w) || ((pn * PGSIZE) & PTE_COW)) {
-		sys_page_alloc(curenv->env_id, va, PTE_COW | PTE_U | PTE_P);
-		r = sys_page_map(curenv->env_id, va, envid, va, PTE_COW | PTE_U | PTE_P);
+	void *va = (void*) (pn * PGSIZE);
+	if ((uvpt[pn] & PTE_W) || (uvpt[pn] & PTE_COW)) {
+		r = sys_page_alloc(0, va, PTE_COW | PTE_U | PTE_P);
+		if (r < 0) {
+			return r;
+		}
+		r = sys_page_map(0, va, envid, va, PTE_COW | PTE_U | PTE_P);
 	} 
 	return r;
 }
@@ -64,9 +68,43 @@ duppage(envid_t envid, unsigned pn)
 static void
 dup_or_share(envid_t dstenv, void *va, int perm) {
 
-	if (!(va & PTE_w)) {
-		sys_page_map(curenv->env_id, va, dstenvid, va, perm);
+	if (!((uint32_t)va & PTE_W)) {
+		sys_page_map(0, va, dstenv, va, perm);
 	}
+
+}
+
+envid_t
+fork_v0(void)
+{
+	envid_t envid;
+	uint8_t *addr;
+	int r;
+
+	envid = sys_exofork();
+
+	if (envid < 0)
+		panic("sys_exofork: %e", envid);
+	if (envid == 0) {
+		thisenv = &envs[ENVX(sys_getenvid())];
+		return 0;
+	}
+
+	for (addr = (uint8_t*) 0; (uint32_t)addr < UTOP; addr += PGSIZE) {
+
+	//Si la pagina esta mapeada se llama a dup_or_share().
+	if ( (uvpt[PGNUM(addr)] & PTE_P) ) {
+			dup_or_share(envid, addr, PTE_SYSCALL);
+		} else {
+			duppage(envid, (uint32_t)addr / PGSIZE);
+		}
+	}
+
+	// Start the child environment running
+	if ((r = sys_env_set_status(envid, ENV_RUNNABLE)) < 0)
+		panic("sys_env_set_status: %e", r);
+
+	return envid;
 
 }
 
@@ -91,40 +129,6 @@ fork(void)
 {
 	// LAB 4: Your code here.
 	return fork_v0();
-}
-
-envid_t
-fork_v0(void)
-{
-	envid_t envid;
-	uint8_t *addr;
-	int r;
-
-	envid = sys_exofork();
-
-	if (envid < 0)
-		panic("sys_exofork: %e", envid);
-	if (envid == 0) {
-		thisenv = &envs[ENVX(sys_getenvid())];
-		return 0;
-	}
-
-	for (addr = (uint8_t*) 0; addr < UTOP; addr += PGSIZE) {
-		pte_t *pte;
-		struct PageInfo *page_info = page_lookup(curenv->env_pgdir, addr, &pte);
-		if (!page_info) {	
-			dup_or_share(envid, addr, PTE_SYSCALL);
-		} else {
-			duppage(envid, addr / PGSIZE);
-		}
-	}
-
-	// Start the child environment running
-	if ((r = sys_env_set_status(envid, ENV_RUNNABLE)) < 0)
-		panic("sys_env_set_status: %e", r);
-
-	return envid;
-
 }
 
 // Challenge!
