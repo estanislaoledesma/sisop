@@ -95,8 +95,7 @@ sys_exofork(void)
 	child->env_status =ENV_NOT_RUNNABLE;
 	child->env_tf = thiscpu->cpu_env->env_tf;
 
-//	return child->env_id;
-	return 0;
+	return child->env_id;
 }
 
 // Set envid's env_status to status, which must be ENV_RUNNABLE
