@@ -258,8 +258,8 @@ static int
 sys_ipc_recv(void *dstva)
 {
 	// LAB 4: Your code here.
-	panic("sys_ipc_recv not implemented");
-	return 0;
+	
+
 }
 
 // Dispatches to the correct kernel function, passing the arguments.

@@ -157,6 +157,7 @@ trap_init_percpu(void)
 									  sizeof(struct Taskstate)-1, 0);
 	gdt[(GD_TSS0 >> 3)+cpuID].sd_s = 0;
 
+
 	ltr( ((GD_TSS0 >> 3)+cpuID) << 3 );
 	lidt(&idt_pd);
 
@@ -299,7 +300,7 @@ trap(struct Trapframe *tf)
 		// current privilege level that the code is executing at.
 
 //		if ( (curenv->env_tf.tf_cs & 0x3) == 3 )
-//			lock_kernel();
+			lock_kernel();
 
 		// Garbage collect if current enviroment is a zombie
 		if (curenv->env_status == ENV_DYING) {
